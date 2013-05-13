@@ -85,9 +85,8 @@ class CKY():
             sentencelist=sentence.split() 
             #an artificial condition says that there is a space separating 
             #punctuation from other words
-            #sentencelist=map(lambda x: '_RARE_' if self.data.Sig[x]==0 else x,
-            #                 sentencelist)
-            #print sentencelist
+            sentencelist=map(lambda x: '_RARE_' if self.data.Sig[x]==0 else x,
+                             sentencelist)
             newpi,newbp = self.findRules(i=0, 
                                          j=len(sentencelist)-1,
                                          sentence=sentencelist)
@@ -169,8 +168,19 @@ class CKY():
             self.dynamictf[i,j,rule]=True
         return maxpi,maxbp
 
-dataset=Dataset('parse_train.counts.out')
+if __name__=="__main__":
+#    dataset=Dataset('parse_train.counts.out')
+#    parser = CKY(dataset)
+#    print parser.parse("When was the _RARE_ invented ?")
+    #cProfile.run ('parser.parse("When was the _RARE_ invented ?")')
 
-parser = CKY(dataset)
-print parser.parse("When was the _RARE_ invented ?")
-#cProfile.run ('parser.parse("When was the _RARE_ invented ?")')
+    import sys
+    countfile=sys.argv[1]
+    sentencefile=sys.argv[2]
+
+    dataset=Dataset(countfile)
+    parser=CKY(dataset)
+
+    sentences=open(sentencefile,'r')
+    for sentence in sentences:
+        print parser.parse(sentence)
