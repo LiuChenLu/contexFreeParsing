@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 from __future__ import division
 from collections import defaultdict
-import subprocess
 import json
 import string
-import cProfile
 
+__author__="Liu Chen Lu"
+__date__="$May 12, 2013"
 #a context free grammar based on data in filename
 class Dataset():
     def __init__(self, filename):
@@ -46,7 +46,8 @@ class Dataset():
     def probXYY(self,X,Y1,Y2):
         """
         probXYY(X,Y1,Y2) finds 
-        probability(X->Y1 Y2)=count(X->Y1 Y2)/count(X)"""
+        probability(X->Y1 Y2)=count(X->Y1 Y2)/count(X)
+        """
         top=self.BR[X,Y1,Y2]
         bottom=self.N[X]
         if bottom==0:
@@ -55,7 +56,7 @@ class Dataset():
             return top/bottom
 
     def probXw(self,X,w):
-        """probXw(X,w) finds probability(X->w)=count(X->W)/count(X)"""
+        """probXw(X,w) finds probability(X->w)=count(X->W)/count(X)\n"""
         top=self.UR[X,w]
         bottom=self.N[X]
         if bottom==0:
@@ -74,8 +75,7 @@ class CKY():
     def parse(self,sentence):
         """
         parse takes a sentence and returns the most likely parse based
-        on contex free gramar
-        """
+        on contex free gramar\n"""
         self.dynamicbp=defaultdict(list)
         self.dynamicpi=defaultdict(int)
         self.dynamictf=defaultdict(lambda:False)
@@ -104,8 +104,7 @@ class CKY():
         """
         internal helper function to cky. findRules finds the 
         appropriate binary or uniary rules to send to recursivePi. 
-        Mutually recursive with recursivePi
-        """
+        Mutually recursive with recursivePi\n"""
 
         maxpi=0
         maxbp=[]
@@ -138,8 +137,7 @@ class CKY():
     def recursivePi(self,i,j,rule,sentence):
         """internal helper function to cky. it iterates through all
         positions, looking for the maximal application of rule to 
-        segment i to j of sentence. mutually recursive with findRules
-        """
+        segment i to j of sentence. mutually recursive with findRules\n"""
         if self.dynamictf[i,j,rule]:
             maxpi=self.dynamicpi[i,j,rule]
             maxbp=self.dynamicbp[i,j,rule]
@@ -173,8 +171,16 @@ if __name__=="__main__":
 #    parser = CKY(dataset)
 #    print parser.parse("When was the _RARE_ invented ?")
     #cProfile.run ('parser.parse("When was the _RARE_ invented ?")')
-
     import sys
+    import cProfile
+    import pretty_print_tree
+    if len(sys.argv) != 3:
+        sys.stderr.write("""
+        Usage: python CKY.py [countfile] [sentencesfile]
+            Trains a context free grammar using [countfile] 
+            and parse each sentence in [sentencesfile]\n""")
+        sys.exit(1)
+
     countfile=sys.argv[1]
     sentencefile=sys.argv[2]
 
@@ -183,4 +189,4 @@ if __name__=="__main__":
 
     sentences=open(sentencefile,'r')
     for sentence in sentences:
-        print parser.parse(sentence)
+        pretty_print_tree.pretty_print_tree( parser.parse(sentence) )
