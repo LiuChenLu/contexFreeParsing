@@ -26,11 +26,12 @@ class Dataset():
         for line in counts:
             r = line.split()
             n = int(r[0])
-            rule_type,rule  =  r[1], tuple(r[2:])
+            rule_type,rule = r[1], tuple(r[2:])
             if rule_type=='NONTERMINAL':
-                self.N[rule]=n # string.atoi(n,base=10)
+                self.N[rule[0]]=n # string.atoi(n,base=10)
             elif rule_type=='UNARYRULE' :
                 self.UR[rule]=n
+                self.Sig[rule[1]]+=n
             elif rule_type=='BINARYRULE':
                 self.BR[rule]=n
             else:
@@ -66,15 +67,17 @@ class Dataset():
 class CKY():
     def __init__(self, data):
         self.data = data
+        self.dynamicbp=defaultdict(list)
+        self.dynamicpi=defaultdict(int)
+        self.dynamictf=defaultdict(lambda:False)
 
     def parse(self,sentence):
         """
         parse takes a sentence and returns the most likely parse based
         on contex free gramar
         """
-        
-        self.dynamicpi=defaultdict(int)
         self.dynamicbp=defaultdict(list)
+        self.dynamicpi=defaultdict(int)
         self.dynamictf=defaultdict(lambda:False)
 
         #use isinstance(sentence,"str") LOOKUP
@@ -82,7 +85,9 @@ class CKY():
             sentencelist=sentence.split() 
             #an artificial condition says that there is a space separating 
             #punctuation from other words
-
+            #sentencelist=map(lambda x: '_RARE_' if self.data.Sig[x]==0 else x,
+            #                 sentencelist)
+            #print sentencelist
             newpi,newbp = self.findRules(i=0, 
                                          j=len(sentencelist)-1,
                                          sentence=sentencelist)
@@ -100,16 +105,14 @@ class CKY():
         """
         internal helper function to cky. findRules finds the 
         appropriate binary or uniary rules to send to recursivePi. 
-        Mutually recursive with recursivepi
+        Mutually recursive with recursivePi
         """
-        BR = self.data.BR
-        UR = self.data.UR
 
         maxpi=0
         maxbp=[]
         if i==j:
             if overrule==None:
-                relevantUR=[elem for elem in UR if elem[1]==sentence[i]]
+                relevantUR=[elem for elem in self.data.UR if elem[1]==sentence[i]]
             else:
                 relevantUR=[(overrule,sentence[i])]
             for rule in relevantUR:
@@ -119,9 +122,9 @@ class CKY():
                     maxbp=newbp
         else:
             if overrule==None:
-                relevantBR=BR
+                relevantBR=self.data.BR
             else:
-                relevantBR=[elem for elem in BR if elem[0]==overrule]
+                relevantBR=[elem for elem in self.data.BR if elem[0]==overrule]
 
             for rule in relevantBR:
                 newpi,newbp=self.recursivePi(i,j,rule,sentence)
@@ -169,4 +172,5 @@ class CKY():
 dataset=Dataset('parse_train.counts.out')
 
 parser = CKY(dataset)
-cProfile.run ('parser.parse("When was the _RARE_ invented ?")')
+print parser.parse("When was the _RARE_ invented ?")
+#cProfile.run ('parser.parse("When was the _RARE_ invented ?")')
